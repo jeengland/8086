@@ -20,60 +20,19 @@ func decodeOp(b byte) string {
 	panic(1)
 }
 
-func decodeReg(r byte, w byte) string {
-	wide := w == 1
+var opcodes = map[uint8]string{
+	0b100010: "mov",
+}
 
-	switch r {
-	case 0b000:
-		if wide {
-			return "ax"
-		} else {
-			return "al"
-		}
-	case 0b001:
-		if wide {
-			return "cx"
-		} else {
-			return "cl"
-		}
-	case 0b010:
-		if wide {
-			return "dx"
-		} else {
-			return "dl"
-		}
-	case 0b011:
-		if wide {
-			return "bx"
-		} else {
-			return "bl"
-		}
-	case 0b100:
-		if wide {
-			return "sp"
-		} else {
-			return "ah"
-		}
-	case 0b101:
-		if wide {
-			return "bp"
-		} else {
-			return "ch"
-		}
-	case 0b110:
-		if wide {
-			return "si"
-		} else {
-			return "dh"
-		}
-	case 0b111:
-		if wide {
-			return "di"
-		} else {
-			return "bh"
-		}
-	}
-	panic(2)
+var registers = map[uint8][2]string{
+	0b000: {"al", "ax"},
+	0b001: {"cl", "cx"},
+	0b010: {"dl", "dx"},
+	0b011: {"bl", "bx"},
+	0b100: {"ah", "sp"},
+	0b101: {"ch", "bp"},
+	0b110: {"dh", "si"},
+	0b111: {"bh", "di"},
 }
 
 func main() {
@@ -98,9 +57,11 @@ func main() {
 		reg := b2 & 0b00111000 >> 3
 		rm := b2 & 0b00000111
 
-		opcodeD := decodeOp(opcode)
-		regD := decodeReg(reg, w)
-		rmD := decodeReg(rm, w)
+		wide := int(w)
+
+		opcodeD := opcodes[opcode]
+		regD := registers[reg][wide]
+		rmD := registers[rm][wide]
 
 		if mod == 0b11 {
 			if d == 0b0 {
