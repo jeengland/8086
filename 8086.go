@@ -80,7 +80,7 @@ func main() {
 	file := flag.String("file", "", "bytes to process")
 	flag.Parse()
 
-	fmt.Println(*file)
+	fmt.Printf("bits 16\n\n")
 
 	dat, err := os.ReadFile(*file)
 
