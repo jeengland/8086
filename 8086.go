@@ -84,16 +84,20 @@ func getBytes(data []byte, i int) []byte {
 	return data[i:end]
 }
 
+func get16BitValue(lo byte, hi byte) int {
+	return int(uint16(hi)<<8 | uint16(lo))
+}
+
 func rmToFromReg(bytes []byte, instruction Instruction) int {
-	b1 := bytes[0]
-	b2 := bytes[1]
+	b0 := bytes[0]
+	b1 := bytes[1]
 
-	d := b1 & 0b00000010 >> 1
-	w := b1 & 0b00000001
+	d := b0 & 0b00000010 >> 1
+	w := b0 & 0b00000001
 
-	mod := b2 & 0b11000000 >> 6
-	reg := b2 & 0b00111000 >> 3
-	rm := b2 & 0b00000111
+	mod := b1 & 0b11000000 >> 6
+	reg := b1 & 0b00111000 >> 3
+	rm := b1 & 0b00000111
 
 	wide := int(w)
 
@@ -114,5 +118,28 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 }
 
 func immediateToReg(bytes []byte, instruction Instruction) int {
-	return 0
+	var count int
+	b0 := bytes[0]
+	b1 := bytes[1]
+
+	w := b0 & 0b00001000 >> 3
+	reg := b0 & 0b00000111
+
+	wide := int(w)
+
+	regD := registers[reg][wide]
+
+	var value int
+
+	if w == 0 {
+		value = int(b1)
+		count = 2
+	} else {
+		b2 := bytes[2]
+		value = get16BitValue(b1, b2)
+		count = 3
+	}
+
+	fmt.Printf("%s %s, %d\n", instruction.opcode, regD, value)
+	return count
 }
