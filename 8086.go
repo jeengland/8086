@@ -41,6 +41,17 @@ var registers = map[uint8][2]string{
 	0b111: {"bh", "di"},
 }
 
+var effectiveAddresses = map[uint8][2]string{
+	0b000: {"bx", "si"},
+	0b001: {"bx", "di"},
+	0b010: {"bp", "si"},
+	0b011: {"bp", "di"},
+	0b100: {"si", ""},
+	0b101: {"di", ""},
+	0b110: {"bp", ""},
+	0b111: {"bx", ""},
+}
+
 func main() {
 	file := flag.String("file", "", "bytes to process")
 	flag.Parse()
@@ -85,7 +96,7 @@ func getBytes(data []byte, i int) []byte {
 }
 
 func get16BitValue(lo byte, hi byte) int {
-	return int(uint16(hi)<<8 | uint16(lo))
+	return int(int16(hi)<<8 | int16(lo))
 }
 
 func rmToFromReg(bytes []byte, instruction Instruction) int {
@@ -102,9 +113,9 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 	wide := int(w)
 
 	regD := registers[reg][wide]
-	rmD := registers[rm][wide]
 
 	if mod == 0b11 {
+		rmD := registers[rm][wide]
 		if d == 0b0 {
 			fmt.Printf("%s %s, %s\n", instruction.opcode, rmD, regD)
 			return 2
@@ -112,7 +123,67 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 			fmt.Printf("%s %s, %s\n", instruction.opcode, regD, rmD)
 			return 2
 		}
+	} else if mod == 0b00 {
+		rmD := effectiveAddresses[rm]
+		var efAd string
+		if rmD[1] != "" {
+			efAd = fmt.Sprintf("[%s + %s]", rmD[0], rmD[1])
+		} else {
+			efAd = fmt.Sprintf("[%s]", rmD[0])
+		}
+		if d == 0b0 {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, efAd, regD)
+			return 2
+		} else {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, regD, efAd)
+			return 2
+		}
+	} else if mod == 0b01 {
+		b2 := bytes[2]
+
+		d8 := int(b2)
+
+		rmD := effectiveAddresses[rm]
+		var efAd string
+
+		if rmD[1] != "" {
+			efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d8)
+		} else {
+			efAd = fmt.Sprintf("[%s + %d]", rmD[0], d8)
+		}
+
+		if d == 0b0 {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, efAd, regD)
+			return 3
+		} else {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, regD, efAd)
+			return 3
+		}
+	} else if mod == 0b10 {
+		b2 := bytes[2]
+		b3 := bytes[3]
+
+		d16 := get16BitValue(b2, b3)
+
+		rmD := effectiveAddresses[rm]
+		var efAd string
+
+		if rmD[1] != "" {
+			efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d16)
+		} else {
+			efAd = fmt.Sprintf("[%s + %d]", rmD[0], d16)
+		}
+
+		if d == 0b0 {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, efAd, regD)
+			return 4
+		} else {
+			fmt.Printf("%s %s, %s\n", instruction.opcode, regD, efAd)
+			return 4
+		}
 	} else {
+		// 100010 1 1 - 01 010 110
+		fmt.Println(int(b0), int(b1))
 		panic(3)
 	}
 }
