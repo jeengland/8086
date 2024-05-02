@@ -30,6 +30,8 @@ var opcodes = map[uint8]Instruction{
 	0b100010:  {"mov", rmToFromReg},
 	0b1011:    {"mov", immediateToReg},
 	0b1100011: {"mov", immediateToRm},
+	0b1010000: {"mov", memoryToAccumulator},
+	0b1010001: {"mov", accumulatorToMemory},
 }
 
 var registers = map[uint8][2]string{
@@ -430,4 +432,48 @@ func immediateToRm(bytes []byte, instruction Instruction) int {
 	} else {
 		panic(3)
 	}
+}
+
+func memoryToAccumulator(bytes []byte, instruction Instruction) int {
+	var count int
+	b0 := bytes[0]
+
+	w := b0 & 0b00000001
+
+	b1 := bytes[1]
+	var add int
+
+	if w == 0 {
+		add = int(int8(b1))
+		count = 2
+	} else {
+		b2 := bytes[2]
+		add = int(get16BitValue(b1, b2))
+		count = 3
+	}
+
+	fmt.Printf("%s ax, [%d]\n", instruction.opcode, add)
+	return count
+}
+
+func accumulatorToMemory(bytes []byte, instruction Instruction) int {
+	var count int
+	b0 := bytes[0]
+
+	w := b0 & 0b00000001
+
+	b1 := bytes[1]
+	var add int
+
+	if w == 0 {
+		add = int(int8(b1))
+		count = 2
+	} else {
+		b2 := bytes[2]
+		add = int(get16BitValue(b1, b2))
+		count = 3
+	}
+
+	fmt.Printf("%s [%d], ax\n", instruction.opcode, add)
+	return count
 }
