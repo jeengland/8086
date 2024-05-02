@@ -116,6 +116,7 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 
 	if mod == 0b11 {
 		rmD := registers[rm][wide]
+
 		if d == 0b0 {
 			fmt.Printf("%s %s, %s\n", instruction.opcode, rmD, regD)
 			return 2
@@ -126,11 +127,13 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 	} else if mod == 0b00 {
 		rmD := effectiveAddresses[rm]
 		var efAd string
+
 		if rmD[1] != "" {
 			efAd = fmt.Sprintf("[%s + %s]", rmD[0], rmD[1])
 		} else {
 			efAd = fmt.Sprintf("[%s]", rmD[0])
 		}
+
 		if d == 0b0 {
 			fmt.Printf("%s %s, %s\n", instruction.opcode, efAd, regD)
 			return 2
@@ -146,10 +149,19 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 		rmD := effectiveAddresses[rm]
 		var efAd string
 
-		if rmD[1] != "" {
-			efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d8)
+		if int(d8) == 0 {
+			if rmD[1] != "" {
+				efAd = fmt.Sprintf("[%s + %s]", rmD[0], rmD[1])
+			} else {
+				efAd = fmt.Sprintf("[%s]", rmD[0])
+			}
+
 		} else {
-			efAd = fmt.Sprintf("[%s + %d]", rmD[0], d8)
+			if rmD[1] != "" {
+				efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d8)
+			} else {
+				efAd = fmt.Sprintf("[%s + %d]", rmD[0], d8)
+			}
 		}
 
 		if d == 0b0 {
@@ -168,10 +180,19 @@ func rmToFromReg(bytes []byte, instruction Instruction) int {
 		rmD := effectiveAddresses[rm]
 		var efAd string
 
-		if rmD[1] != "" {
-			efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d16)
+		if int(d16) == 0 {
+			if rmD[1] != "" {
+				efAd = fmt.Sprintf("[%s + %s]", rmD[0], rmD[1])
+			} else {
+				efAd = fmt.Sprintf("[%s]", rmD[0])
+			}
+
 		} else {
-			efAd = fmt.Sprintf("[%s + %d]", rmD[0], d16)
+			if rmD[1] != "" {
+				efAd = fmt.Sprintf("[%s + %s + %d]", rmD[0], rmD[1], d16)
+			} else {
+				efAd = fmt.Sprintf("[%s + %d]", rmD[0], d16)
+			}
 		}
 
 		if d == 0b0 {
